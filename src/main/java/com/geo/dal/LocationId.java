@@ -9,6 +9,10 @@ public class LocationId implements Serializable {
 	private Float latitude;
 	private Float longitude;
 	
+	LocationId() {
+		// Needed for ORM. Keep with limited access as possible.
+	}
+	
 	public LocationId(Float latitude, Float longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;

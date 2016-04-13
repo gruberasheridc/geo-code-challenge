@@ -29,5 +29,13 @@ public class Location {
 	@Id
 	@Column(name="longitude")
 	private Float longitude;
+
+	public Float getLatitude() {
+		return latitude;
+	}
+
+	public Float getLongitude() {
+		return longitude;
+	}
 	
 }
