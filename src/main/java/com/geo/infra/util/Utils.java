@@ -13,7 +13,7 @@ public class Utils {
    * @param longitude1 the longitude of the first point
    * @param latitude2 the latitude of the second point
    * @param longitude2 the longitude of the second point
-   * @return the distance, in meters, between the two points
+   * @return the distance, in miles, between the two points
    */
   public static float getDistance(double latitude1, double longitude1, double latitude2, double longitude2) {
       double dLat = Math.toRadians(latitude2 - latitude1);

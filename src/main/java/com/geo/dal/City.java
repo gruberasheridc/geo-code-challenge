@@ -1,31 +1,36 @@
-/*package com.geo.dal;
+package com.geo.dal;
 
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import java.math.BigDecimal;
 
-import org.hibernate.envers.Audited;
-
-@Entity
-@Table(name = "geo_city")
 public class City {
 	
-	@Id 
-	@GeneratedValue
-	@Column(name="id")
-	private Long id;
-	
-	@Column(name="code")
-	private Long code;
-	
-	@Column(name="name")
 	private String name;
+	private BigDecimal latitude;
+	private BigDecimal longitude;
 	
+	public City(String name, String latitude, String longitude) {
+		this.name = name;
+		this.latitude = new BigDecimal(latitude);
+		this.longitude = new BigDecimal(longitude);
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public BigDecimal getLatitude() {
+		return latitude;
+	}
+
+	public BigDecimal getLongitude() {
+		return longitude;
+	}
+
+	@Override
+	public String toString() {
+		return "City [name=" + name + ", latitude=" + latitude + ", longitude=" + longitude + "]";
+	}
+		
 }
-*/
