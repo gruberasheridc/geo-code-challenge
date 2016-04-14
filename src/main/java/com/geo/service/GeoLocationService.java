@@ -16,4 +16,7 @@ public interface GeoLocationService {
 	
 	@Transactional
 	void addData(float latitude, float longitude);
+	
+	@Transactional(readOnly=true)
+	void analyzeLocations();
 }
