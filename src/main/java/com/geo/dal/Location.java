@@ -2,6 +2,8 @@ package com.geo.dal;
 
 
 
+import java.math.BigDecimal;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -17,25 +19,30 @@ public class Location {
 		// Needed for ORM. Keep with limited access as possible.
 	}
 	
-	public Location(Float latitude, Float longitude) {
+	public Location(BigDecimal latitude, BigDecimal longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
 	
 	@Id
 	@Column(name="latitude")
-	private Float latitude;
+	private BigDecimal latitude;
 	
 	@Id
 	@Column(name="longitude")
-	private Float longitude;
+	private BigDecimal longitude;
 
-	public Float getLatitude() {
+	public BigDecimal getLatitude() {
 		return latitude;
 	}
 
-	public Float getLongitude() {
+	public BigDecimal getLongitude() {
 		return longitude;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "(latitude=" + latitude + ", longitude=" + longitude + ")";
+	}
+		
 }

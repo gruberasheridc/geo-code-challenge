@@ -1,5 +1,6 @@
 package com.geo.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -25,14 +26,14 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	}
 
 	@Override
-	public Boolean getData(float latitude, float longitude) {
+	public Boolean getData(BigDecimal latitude, BigDecimal longitude) {
 		LocationId locationId = new LocationId(latitude, longitude);
 		boolean locationExists = geoRepo.exists(locationId);
 		return locationExists;
 	}
 
 	@Override
-	public void addData(float latitude, float longitude) {
+	public void addData(BigDecimal latitude, BigDecimal longitude) {
 		boolean locationExists = getData(latitude, latitude); 
 		if (!locationExists) {
 			Location location = new Location(latitude, longitude);
@@ -47,9 +48,8 @@ class GeoLocationServiceImpl implements GeoLocationService {
 		if (CollectionUtils.isNotEmpty(locations)) {
 			for (Location location : locations) {
 				String result = restTemplate.getForObject("http://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false", 
-						String.class, location.getLatitude(), location.getLatitude());
+						String.class, location.getLatitude(), location.getLongitude());
 				String country = new JsonPath(result).get("results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name");
-				System.out.println(country);
 			}
 		}		
 	}

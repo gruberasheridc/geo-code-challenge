@@ -1,23 +1,24 @@
 package com.geo.dal;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 public class LocationId implements Serializable {
 
 	private static final long serialVersionUID = 3948807150893616841L;
 	
-	private Float latitude;
-	private Float longitude;
+	private BigDecimal latitude;
+	private BigDecimal longitude;
 	
 	LocationId() {
 		// Needed for ORM. Keep with limited access as possible.
 	}
 	
-	public LocationId(Float latitude, Float longitude) {
+	public LocationId(BigDecimal latitude, BigDecimal longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -26,7 +27,7 @@ public class LocationId implements Serializable {
 		result = prime * result + ((longitude == null) ? 0 : longitude.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -48,5 +49,5 @@ public class LocationId implements Serializable {
 			return false;
 		return true;
 	}
-
+	
 }

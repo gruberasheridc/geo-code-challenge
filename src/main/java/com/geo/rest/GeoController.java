@@ -1,5 +1,6 @@
 package com.geo.rest;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -36,7 +37,7 @@ public class GeoController {
 	}
 	
 	@RequestMapping(value = "/geo/exist", method = RequestMethod.GET)
-	public Boolean getLocation(@RequestParam @NotNull Float latitude, @RequestParam @NotNull Float longitude) {
+	public Boolean getLocation(@RequestParam @NotNull BigDecimal latitude, @RequestParam @NotNull BigDecimal longitude) {
 		// TODO check the validation.
 		Boolean doesLocationExist = geoService.getData(latitude, longitude);
 		return doesLocationExist;

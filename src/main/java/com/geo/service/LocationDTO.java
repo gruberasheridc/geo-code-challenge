@@ -1,24 +1,30 @@
 package com.geo.service;
 
+import java.math.BigDecimal;
 
 public class LocationDTO {
 
-	private Float latitude;
-	private Float longitude;
+	private BigDecimal latitude;
+	private BigDecimal longitude;
 	
-	public Float getLatitude() {
+	public BigDecimal getLatitude() {
 		return latitude;
 	}
 	
-	public void setLatitude(Float latitude) {
+	public void setLatitude(BigDecimal latitude) {
 		this.latitude = latitude;
 	}
 	
-	public Float getLongitude() {
+	public BigDecimal getLongitude() {
 		return longitude;
 	}
 	
-	public void setLongitude(Float longitude) {
+	public void setLongitude(BigDecimal longitude) {
 		this.longitude = longitude;
+	}
+	
+	@Override
+	public String toString() {
+		return "(latitude=" + latitude + ", longitude=" + longitude + ")";
 	}
 }

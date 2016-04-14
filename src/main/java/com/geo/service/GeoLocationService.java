@@ -1,5 +1,6 @@
 package com.geo.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -12,10 +13,10 @@ public interface GeoLocationService {
 	List<Location> getAllDataSets();
 	
 	@Transactional(readOnly=true)
-	Boolean getData(float latitude, float longitude);
+	Boolean getData(BigDecimal latitude, BigDecimal longitude);
 	
 	@Transactional
-	void addData(float latitude, float longitude);
+	void addData(BigDecimal latitude, BigDecimal longitude);
 	
 	@Transactional(readOnly=true)
 	void analyzeLocations();
