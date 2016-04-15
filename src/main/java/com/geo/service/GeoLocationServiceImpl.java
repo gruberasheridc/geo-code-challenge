@@ -120,6 +120,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 		String country = getLocationCountry(restTemplate, location);
 		if (country == null) {
 			writeIsInUnitedStatesCell("N/A", row);
+			calcLocationDistanceFromCities(location, row);
 		} else if (UNITED_STATES_SHORT_NAME.equals(country)) {
 			writeIsInUnitedStatesCell("Yes", row);
 		} else {
@@ -139,7 +140,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	 */
 	private void calcLocationDistanceFromCities(Location location, StringBuffer row) {
 		for (City city : cities) {
-			double distance = CalcUtils.getDistance(location.getLatitude().doubleValue(), location.getLongitude().doubleValue(), 
+			float distance = CalcUtils.getDistance(location.getLatitude().doubleValue(), location.getLongitude().doubleValue(), 
 					city.getLatitude().doubleValue(), city.getLongitude().doubleValue());
 
 			row.append(TAB);
@@ -182,7 +183,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	 * @return the country (short name format) associated with the given location if exists (null otherwise).
 	 */
 	private String getLocationCountry(RestTemplate restTemplate, Location location) {
-		String result = restTemplate.getForObject("http://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false", 
+		String result = restTemplate.getForObject("https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false&key=AIzaSyD3_ZaOeg4qjuFkl9Ar27WQH7UU10N2JUQ", 
 				String.class, location.getLatitude(), location.getLongitude());
 		String country = new JsonPath(result).get("results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name");
 		return country;
