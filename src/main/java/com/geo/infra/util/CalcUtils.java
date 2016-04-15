@@ -6,7 +6,7 @@ public class CalcUtils {
     private static final double EARTH_RADIUS_M = 3961.0;
   
   /**
-   * Gets the great circle distance in meters between two geographical points, using
+   * Gets the great circle distance in miles between two geographical points, using
    * the <a href="http://en.wikipedia.org/wiki/Haversine_formula">haversine formula</a>.
    *
    * @param latitude1 the latitude of the first point
