@@ -19,7 +19,7 @@ public class GeoChallengeApplicationTests {
 
 	@Test
 	public void analyzeLocations() {
-		geoService.doLocationsAnalysis();
+		//geoService.doLocationsAnalysis();
 	}
 
 }
