@@ -2,7 +2,6 @@ package com.geo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.batch.item.UnexpectedInputException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -20,12 +19,7 @@ public class GeoChallengeApplicationTests {
 
 	@Test
 	public void analyzeLocations() {
-		geoService.analyzeLocations();
-	}
-	
-	@Test
-	public void populateLocations() throws UnexpectedInputException, Exception {
-		geoService.populateLocations();
+		geoService.doLocationsAnalysis();
 	}
 
 }

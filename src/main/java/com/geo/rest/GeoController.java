@@ -3,8 +3,6 @@ package com.geo.rest;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.validation.constraints.NotNull;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,8 +35,7 @@ public class GeoController {
 	}
 	
 	@RequestMapping(value = "/geo/exist", method = RequestMethod.GET)
-	public Boolean getLocation(@RequestParam @NotNull BigDecimal latitude, @RequestParam @NotNull BigDecimal longitude) {
-		// TODO check the validation.
+	public Boolean getLocation(@RequestParam BigDecimal latitude, @RequestParam BigDecimal longitude) {
 		Boolean doesLocationExist = geoService.getData(latitude, longitude);
 		return doesLocationExist;
 	}

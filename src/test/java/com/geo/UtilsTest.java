@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 import org.junit.Test;
 
-import com.geo.infra.util.Utils;
+import com.geo.infra.util.CalcUtils;
 
 import junit.framework.TestCase;
 
@@ -24,10 +24,10 @@ public class UtilsTest extends TestCase
     	BigDecimal lat2 = new BigDecimal("-33.86785");
     	BigDecimal lon2 = new BigDecimal("151.20732");
     	
-    	double distance = Utils.getDistance(lat1.doubleValue(), lon1.doubleValue(), lat1.doubleValue(), lon1.doubleValue());
+    	double distance = CalcUtils.getDistance(lat1.doubleValue(), lon1.doubleValue(), lat1.doubleValue(), lon1.doubleValue());
     	System.out.println(distance);
     	
-    	distance = Utils.getDistance(lat1.doubleValue(), lon1.doubleValue(), lat2.doubleValue(), lon2.doubleValue());
+    	distance = CalcUtils.getDistance(lat1.doubleValue(), lon1.doubleValue(), lat2.doubleValue(), lon2.doubleValue());
     	System.out.println(distance);
     }
 }

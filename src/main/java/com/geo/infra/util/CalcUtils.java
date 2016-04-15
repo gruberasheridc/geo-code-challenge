@@ -1,6 +1,6 @@
 package com.geo.infra.util;
 
-public class Utils {
+public class CalcUtils {
     
     /* The Earth's radius, in miles (an optimization radius. Earth's mean radius = 3,956.547).*/
     private static final double EARTH_RADIUS_M = 3961.0;

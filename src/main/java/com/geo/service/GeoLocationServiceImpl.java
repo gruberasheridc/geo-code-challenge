@@ -28,11 +28,17 @@ import com.geo.dal.City;
 import com.geo.dal.GeoRepository;
 import com.geo.dal.Location;
 import com.geo.dal.LocationId;
-import com.geo.infra.util.Utils;
+import com.geo.infra.util.CalcUtils;
+import com.geo.infra.util.ValidationUtils;
 import com.jayway.restassured.path.json.JsonPath;
 
 @Service
 class GeoLocationServiceImpl implements GeoLocationService {
+
+	private static final String MILES_LABEL = "mi";
+	private static final double CITY_DISTANCE_THRESHOLD = 500.0;
+	private static final String WITHIN_CITY_DISTANCE_THRESHOLD_LABEL = "(<=" + CITY_DISTANCE_THRESHOLD + " " + MILES_LABEL + ")";
+	private static final String MORE_CITY_DISTANCE_THRESHOLD_LABEL = "(>" + CITY_DISTANCE_THRESHOLD + " " + MILES_LABEL + ")";
 
 	@Value("${report.output.file}") 
 	private String reportFile;	
@@ -63,6 +69,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 
 	@Override
 	public Boolean getData(BigDecimal latitude, BigDecimal longitude) {
+		validateCoordinates(latitude, longitude);
 		LocationId locationId = new LocationId(latitude, longitude);
 		boolean locationExists = geoRepo.exists(locationId);
 		return locationExists;
@@ -70,6 +77,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 
 	@Override
 	public boolean addData(BigDecimal latitude, BigDecimal longitude) {
+		validateCoordinates(latitude, longitude);		
 		boolean locationExists = getData(latitude, longitude); 
 		if (!locationExists) {
 			Location location = new Location(latitude, longitude);
@@ -79,52 +87,105 @@ class GeoLocationServiceImpl implements GeoLocationService {
 		return !locationExists;
 	}
 
+	private void validateCoordinates(BigDecimal latitude, BigDecimal longitude) {
+		ValidationUtils.notNull(latitude, "The parameter latitude must exist.");
+		ValidationUtils.notNull(longitude, "The parameter longitude must exist.");
+	}
+
 	@Override
-	public void analyzeLocations() {
-		List<Location> locations = getAllDataSets();
-		RestTemplate restTemplate = new RestTemplate();
+	public void doLocationsAnalysis() {
+		List<Location> locations = getAllDataSets();		
 		if (CollectionUtils.isNotEmpty(locations)) {
+			// For each of the locations generate a spreadsheet row with the location's analysis data.
+			RestTemplate restTemplate = new RestTemplate();
 			List<String> rows = new ArrayList<>();
 			for (Location location : locations) {
-				StringBuffer row = new StringBuffer(location.getLatitude() + TAB + location.getLongitude());
-				String result = restTemplate.getForObject("http://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false", 
-						String.class, location.getLatitude(), location.getLongitude());
-				String country = new JsonPath(result).get("results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name");
-				if (country == null) {
-					row.append(TAB);
-					row.append("N/A");
-				} else if (UNITED_STATES_SHORT_NAME.equals(country)) {
-					row.append(TAB);
-					row.append("Yes");
-				} else {
-					row.append(TAB);
-					row.append("No");
-					for (City city : cities) {
-						double distance = Utils.getDistance(location.getLatitude().doubleValue(), location.getLongitude().doubleValue(), 
-								city.getLatitude().doubleValue(), city.getLongitude().doubleValue());
-
-						row.append(TAB);
-						row.append(distance);
-					}
-				}
-				
-				rows.add(row.toString());
+				generateLocationRow(restTemplate, location, rows);
 			}
 			
 			if (CollectionUtils.isNotEmpty(rows)) {
-				List<String> report = new ArrayList<>();
-				String headers = String.join(TAB, Arrays.asList("Latitude", "Longitude", "United States")) + TAB +
-						cities.stream().map(city -> city.getName()).collect(Collectors.joining(TAB));
-				report.add(headers);
-				report.addAll(rows);
-				Path outputPath = Paths.get(reportFile);
-				try {
-					Files.write(outputPath, report);
-				} catch (IOException e) {
-					System.out.println("Faild to write Report output file name: " + reportFile + ".");
-				}
+				generateLocationsSpreadsheet(rows);
 			}
 		}		
+	}
+
+	/**
+	 * The method generates a spreadsheet row containing the location's analysis information.
+	 * @param restTemplate used in order to obtain the location's country using the Google Maps REST API.
+	 * @param location the Location for whom to generate the row. 
+	 * @param rows location's rows with analysis information.
+	 */
+	private void generateLocationRow(RestTemplate restTemplate, Location location, List<String> rows) {
+		StringBuffer row = new StringBuffer(location.getLatitude() + TAB + location.getLongitude());
+		String country = getLocationCountry(restTemplate, location);
+		if (country == null) {
+			writeIsInUnitedStatesCell("N/A", row);
+		} else if (UNITED_STATES_SHORT_NAME.equals(country)) {
+			writeIsInUnitedStatesCell("Yes", row);
+		} else {
+			writeIsInUnitedStatesCell("No", row);
+			calcLocationDistanceFromCities(location, row);
+		}
+		
+		rows.add(row.toString());
+	}
+
+	/**
+	 * The method calculated the distance of the location from each of the cities.
+	 * The results are written to the city's corresponding cell with an additional label
+	 * indicating the the distance is within the defined threshold.
+	 * @param location the location for whom to calculate the distance.
+	 * @param row the row for whom to write the calculation results.
+	 */
+	private void calcLocationDistanceFromCities(Location location, StringBuffer row) {
+		for (City city : cities) {
+			double distance = CalcUtils.getDistance(location.getLatitude().doubleValue(), location.getLongitude().doubleValue(), 
+					city.getLatitude().doubleValue(), city.getLongitude().doubleValue());
+
+			row.append(TAB);
+			row.append(distance);
+			row.append(" ");
+			row.append(MILES_LABEL);
+			row.append(distance <= CITY_DISTANCE_THRESHOLD ? WITHIN_CITY_DISTANCE_THRESHOLD_LABEL : MORE_CITY_DISTANCE_THRESHOLD_LABEL);			
+		}
+	}
+
+	/**
+	 * The method generates a TSV spreadsheet from the given rows.
+	 * @param rows the data rows from whom to generate the spreadsheet.
+	 */
+	private void generateLocationsSpreadsheet(List<String> rows) {
+		// Join the headers and the rows and generate the report.
+		List<String> report = new ArrayList<>();
+		String headers = String.join(TAB, Arrays.asList("Latitude", "Longitude", "United States")) + TAB +
+				cities.stream().map(city -> city.getName()).collect(Collectors.joining(TAB));
+
+		report.add(headers);
+		report.addAll(rows);
+		Path outputPath = Paths.get(reportFile);
+		try {
+			Files.write(outputPath, report);
+		} catch (IOException e) {
+			System.out.println("Faild to write Locations spreadsheet to output file: " + reportFile + ".");
+		}
+	}
+
+	private void writeIsInUnitedStatesCell(String cell, StringBuffer row) {
+		row.append(TAB);
+		row.append(cell);
+	}
+
+	/**
+	 * The method finds the location's country using the Google Maps REST API.
+	 * @param restTemplate used in order to perform the REST call to the Google Maps REST API.
+	 * @param location the Location for whom to find the associated country. 
+	 * @return the country (short name format) associated with the given location if exists (null otherwise).
+	 */
+	private String getLocationCountry(RestTemplate restTemplate, Location location) {
+		String result = restTemplate.getForObject("http://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false", 
+				String.class, location.getLatitude(), location.getLongitude());
+		String country = new JsonPath(result).get("results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name");
+		return country;
 	}
 
 	@Override
@@ -132,7 +193,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 		FlatFileItemReader<City> itemReader = createItemReader();
 		// Go over all city rows and randomly select a city location to be entered into the DB.
 		itemReader.open(new ExecutionContext());
-		try {			
+		try {
 			int errors = 0;
 			int cityWriten = 0;
 			Random random = new Random();
@@ -146,7 +207,6 @@ class GeoLocationServiceImpl implements GeoLocationService {
 							cityWriten++;
 						}
 					}
-
 				} catch (ParseException ex) {
 					errors++;
 				}
