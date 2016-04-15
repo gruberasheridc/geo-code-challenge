@@ -189,9 +189,19 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	 * @return the country (short name format) associated with the given location if exists (null otherwise).
 	 */
 	private String getLocationCountry(RestTemplate restTemplate, Location location) {
-		String result = restTemplate.getForObject(GOOGLE_MAPS_API_LOCATION_INFO_URL, 
-				String.class, location.getLatitude(), location.getLongitude(), googleMapsApiKey);
-		String country = new JsonPath(result).get(JSON_PATH_FINDING_COUNTRY_SHORT_NAME);
+		String result = null;
+		try {
+			result = restTemplate.getForObject(GOOGLE_MAPS_API_LOCATION_INFO_URL, 
+					String.class, location.getLatitude(), location.getLongitude(), googleMapsApiKey);
+		} catch (Exception e) {
+			System.out.println("Faild to get Locations details response from Google API. Location: " + location + ".");
+		}
+
+		String country = null;
+		if (result != null) {
+			country = new JsonPath(result).get(JSON_PATH_FINDING_COUNTRY_SHORT_NAME);
+		}
+		
 		return country;
 	}
 
