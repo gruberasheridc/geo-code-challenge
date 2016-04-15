@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.geo.dal.City;
-import com.geo.dal.GeoRepository;
+import com.geo.dal.LocationRepository;
 import com.geo.dal.Location;
 import com.geo.dal.LocationId;
 import com.geo.infra.util.CalcUtils;
@@ -65,7 +65,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	private static final int LOCATIONE_POPULATION_ERROR_THRESHOLD = 1000;
 	
 	@Autowired
-	GeoRepository geoRepo;
+	LocationRepository geoRepo;
 
 	@Override
 	public List<Location> getAllDataSets() {

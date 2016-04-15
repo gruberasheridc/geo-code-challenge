@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.geo.dal.Location;
 import com.geo.infra.dto.MappingService;
+import com.geo.rest.dto.LocationDTO;
 import com.geo.service.GeoLocationService;
-import com.geo.service.LocationDTO;
 
 
 @RestController

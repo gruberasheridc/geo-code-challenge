@@ -1,4 +1,4 @@
-package com.geo.service;
+package com.geo.rest.dto;
 
 import java.util.List;
 
