@@ -35,25 +35,31 @@ import com.jayway.restassured.path.json.JsonPath;
 @Service
 class GeoLocationServiceImpl implements GeoLocationService {
 
+	@Value("${report.output.file}") 
+	private String reportFile;
+
+	@Value("${geonames.cities.file}") 
+	private String citiesFile;
+	
+	@Value("${google.maps.api.key}") 
+	private String googleMapsApiKey;
+
+	private static final String US_COLUMN_LABEL = "United States";
+	private static final String LONGITUDE_COLUMN_LABEL = "Longitude";
+	private static final String LATITUDE_COLUMN_LABEL = "Latitude";
+	private static final String COUNTRY_LOCATIO_NA_LABEL = "N/A";
+	private static final String COUNTRY_LOCATIO_IS_NOT_US_LABEL = "No";
+	private static final String COUNTRY_LOCATIO_IS_US_LABEL = "Yes";
 	private static final String MILES_LABEL = "mi";
 	private static final double CITY_DISTANCE_THRESHOLD = 500.0;
 	private static final String WITHIN_CITY_DISTANCE_THRESHOLD_LABEL = "(<=" + CITY_DISTANCE_THRESHOLD + " " + MILES_LABEL + ")";
 	private static final String MORE_CITY_DISTANCE_THRESHOLD_LABEL = "(>" + CITY_DISTANCE_THRESHOLD + " " + MILES_LABEL + ")";
 
-	@Value("${report.output.file}") 
-	private String reportFile;	
-
 	private static final String TAB = "\t";
 	
 	private static final String UNITED_STATES_SHORT_NAME = "US";
-	private static final List<City> cities = Arrays.asList(
-			new City("Tokyo", "35.6895", "139.69171"),
-			new City("Sydney", "-33.86785", "151.20732"),
-			new City("Riyadh", "24.68773", "46.72185"),
-			new City("Zurich", "47.36667", "8.55"),
-			new City("Reykjavik", "64.13548", "-21.89541"),
-			new City("Mexico City", "19.42847", "-99.12766"),
-			new City("Lima", "-12.04318", "-77.02824"));
+	private static final String JSON_PATH_FINDING_COUNTRY_SHORT_NAME = "results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name";
+	private static final String GOOGLE_MAPS_API_LOCATION_INFO_URL = "https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false&key={key}";
 	
 	private static final int NUM_LOCATIONS_TO_GENERATE = 10000;
 	private static final int LOCATIONE_POPULATION_ERROR_THRESHOLD = 1000;
@@ -119,12 +125,12 @@ class GeoLocationServiceImpl implements GeoLocationService {
 		StringBuffer row = new StringBuffer(location.getLatitude() + TAB + location.getLongitude());
 		String country = getLocationCountry(restTemplate, location);
 		if (country == null) {
-			writeIsInUnitedStatesCell("N/A", row);
+			writeIsInUnitedStatesCell(COUNTRY_LOCATIO_NA_LABEL, row);
 			calcLocationDistanceFromCities(location, row);
 		} else if (UNITED_STATES_SHORT_NAME.equals(country)) {
-			writeIsInUnitedStatesCell("Yes", row);
+			writeIsInUnitedStatesCell(COUNTRY_LOCATIO_IS_US_LABEL, row);
 		} else {
-			writeIsInUnitedStatesCell("No", row);
+			writeIsInUnitedStatesCell(COUNTRY_LOCATIO_IS_NOT_US_LABEL, row);
 			calcLocationDistanceFromCities(location, row);
 		}
 		
@@ -139,7 +145,7 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	 * @param row the row for whom to write the calculation results.
 	 */
 	private void calcLocationDistanceFromCities(Location location, StringBuffer row) {
-		for (City city : cities) {
+		for (City city : CityConstants.COMPARE_CITIES_LIST) {
 			float distance = CalcUtils.getDistance(location.getLatitude().doubleValue(), location.getLongitude().doubleValue(), 
 					city.getLatitude().doubleValue(), city.getLongitude().doubleValue());
 
@@ -158,8 +164,8 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	private void generateLocationsSpreadsheet(List<String> rows) {
 		// Join the headers and the rows and generate the report.
 		List<String> report = new ArrayList<>();
-		String headers = String.join(TAB, Arrays.asList("Latitude", "Longitude", "United States")) + TAB +
-				cities.stream().map(city -> city.getName()).collect(Collectors.joining(TAB));
+		String headers = String.join(TAB, Arrays.asList(LATITUDE_COLUMN_LABEL, LONGITUDE_COLUMN_LABEL, US_COLUMN_LABEL)) + TAB +
+				CityConstants.COMPARE_CITIES_LIST.stream().map(city -> city.getName()).collect(Collectors.joining(TAB));
 
 		report.add(headers);
 		report.addAll(rows);
@@ -183,9 +189,9 @@ class GeoLocationServiceImpl implements GeoLocationService {
 	 * @return the country (short name format) associated with the given location if exists (null otherwise).
 	 */
 	private String getLocationCountry(RestTemplate restTemplate, Location location) {
-		String result = restTemplate.getForObject("https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&sensor=false&key=AIzaSyD3_ZaOeg4qjuFkl9Ar27WQH7UU10N2JUQ", 
-				String.class, location.getLatitude(), location.getLongitude());
-		String country = new JsonPath(result).get("results.address_components.flatten().find { it.types.flatten().contains('country') } ?.short_name");
+		String result = restTemplate.getForObject(GOOGLE_MAPS_API_LOCATION_INFO_URL, 
+				String.class, location.getLatitude(), location.getLongitude(), googleMapsApiKey);
+		String country = new JsonPath(result).get(JSON_PATH_FINDING_COUNTRY_SHORT_NAME);
 		return country;
 	}
 
@@ -220,15 +226,15 @@ class GeoLocationServiceImpl implements GeoLocationService {
 
 	private FlatFileItemReader<City> createItemReader() {
 		FlatFileItemReader<City> itemReader = new FlatFileItemReader<City>();
-		itemReader.setResource(new FileSystemResource("src/main/resources/data/cities5000.txt"));
+		itemReader.setResource(new FileSystemResource(citiesFile));
 		itemReader.setLineMapper(new DefaultLineMapper<City>() {{
             setLineTokenizer(new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB) {{
             	setNames(new String[] {"geonameid",
                         "name",
-                        "asciiname",
+                        CityConstants.CITY_ASCIINAME,
                         "alternatenames",
-                        "latitude",
-                        "longitude",
+                        CityConstants.CITY_LATITUDE,
+                        CityConstants.CITY_LONGITUDE,
                         "feature class",
                         "feature code",
                         "country code",

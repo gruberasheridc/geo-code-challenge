@@ -13,7 +13,10 @@ public class CityFieldSetMapper implements FieldSetMapper<City>{
 			return null;
 		}
 
-		City city = new City(fieldSet.readString("asciiname"), fieldSet.readString("latitude"), fieldSet.readString("longitude"));
+		City city = new City(fieldSet.readString(CityConstants.CITY_ASCIINAME),
+				fieldSet.readString(CityConstants.CITY_LATITUDE),
+				fieldSet.readString(CityConstants.CITY_LONGITUDE));
+		
 		return city;
 	}
 
